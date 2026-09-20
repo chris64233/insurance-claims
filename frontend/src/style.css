@@ -15,17 +15,133 @@ body {
 }
 
 .shell {
-  min-height: 100vh;
-  display: grid;
-  place-content: center;
-  text-align: center;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
 }
 
-h1 {
-  margin: 0 0 0.75rem;
+.page-header {
+  margin-bottom: 1.5rem;
 }
 
-p {
+.page-header h1 {
+  margin: 0 0 0.5rem;
+}
+
+.page-header p {
   margin: 0;
   color: #60708f;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(23, 32, 51, 0.06);
+}
+
+.card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.claim-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.claim-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #3a4763;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #ccd5e4;
+  border-radius: 8px;
+  background: #fbfcfe;
+  color: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+  border-color: #3b82f6;
+}
+
+button {
+  font: inherit;
+  padding: 0.6rem 1.6rem;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #93b4f5;
+  cursor: not-allowed;
+}
+
+.link-button {
+  background: none;
+  color: #2563eb;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.message {
+  margin: 0;
+  color: #60708f;
+}
+
+.message.error {
+  color: #c03434;
+}
+
+.message.success {
+  color: #15803d;
+}
+
+.claim-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.claim-table th,
+.claim-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e5eaf3;
+  white-space: nowrap;
+}
+
+.claim-table th {
+  color: #60708f;
+  font-weight: 600;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.85rem;
 }
