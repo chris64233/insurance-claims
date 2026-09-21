@@ -46,6 +46,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    @ExceptionHandler(InvalidSettleAmountException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidSettleAmount(InvalidSettleAmountException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @ExceptionHandler(DuplicateClaimException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateClaimException ex) {
         Map<String, Object> body = new LinkedHashMap<>();

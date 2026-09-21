@@ -14,6 +14,7 @@ public class ClaimReportService {
     public static final String INITIAL_STATUS = "待受理";
     public static final String ACCEPTED_STATUS = "处理中";
     public static final String REJECTED_STATUS = "已驳回";
+    public static final String SETTLED_STATUS = "已结案";
 
     private static final DateTimeFormatter CLAIM_NO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -71,6 +72,26 @@ public class ClaimReportService {
         report.setHandledBy(request.handler());
         report.setHandledAt(LocalDateTime.now());
         report.setRejectReason(request.rejectReason());
+        return ClaimReportResponse.from(repository.save(report));
+    }
+
+    @Transactional
+    public ClaimReportResponse settle(Long id, SettleClaimRequest request) {
+        ClaimReport report = repository.findById(id)
+                .orElseThrow(() -> new ClaimNotFoundException("报案不存在，ID：" + id));
+        if (!ACCEPTED_STATUS.equals(report.getStatus())) {
+            throw new ClaimStateConflictException(
+                    "报案当前状态为「" + report.getStatus() + "」，仅「处理中」状态的报案可以结案");
+        }
+        if (request.finalAmount().compareTo(report.getClaimAmount()) > 0) {
+            throw new InvalidSettleAmountException(
+                    "最终赔付金额不能超过申请金额（申请金额：" + report.getClaimAmount() + "）");
+        }
+        report.setStatus(SETTLED_STATUS);
+        report.setSettleAmount(request.finalAmount());
+        report.setSettledBy(request.handler());
+        report.setSettledAt(LocalDateTime.now());
+        report.setSettleNote(request.settleNote());
         return ClaimReportResponse.from(repository.save(report));
     }
 
