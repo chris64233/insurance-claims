@@ -23,10 +23,27 @@ public class GlobalExceptionHandler {
                         (first, ignored) -> first,
                         LinkedHashMap::new));
 
+        Object target = ex.getBindingResult().getTarget();
+        String message = target instanceof CreateClaimRequest ? "报案信息校验失败" : "请求参数校验失败";
+
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("message", "报案信息校验失败");
+        body.put("message", message);
         body.put("errors", fieldErrors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(ClaimNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ClaimNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ClaimStateConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleStateConflict(ClaimStateConflictException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(DuplicateClaimException.class)

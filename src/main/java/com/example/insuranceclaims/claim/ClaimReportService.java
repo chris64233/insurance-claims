@@ -12,6 +12,8 @@ import java.util.List;
 public class ClaimReportService {
 
     public static final String INITIAL_STATUS = "待受理";
+    public static final String ACCEPTED_STATUS = "处理中";
+    public static final String REJECTED_STATUS = "已驳回";
 
     private static final DateTimeFormatter CLAIM_NO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -50,6 +52,36 @@ public class ClaimReportService {
         return repository.findAllByOrderByCreatedAtDesc().stream()
                 .map(ClaimReportResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public ClaimReportResponse accept(Long id, AcceptClaimRequest request) {
+        ClaimReport report = findPendingClaim(id, "受理");
+        report.setStatus(ACCEPTED_STATUS);
+        report.setHandledBy(request.handler());
+        report.setHandledAt(LocalDateTime.now());
+        report.setRejectReason(null);
+        return ClaimReportResponse.from(repository.save(report));
+    }
+
+    @Transactional
+    public ClaimReportResponse reject(Long id, RejectClaimRequest request) {
+        ClaimReport report = findPendingClaim(id, "驳回");
+        report.setStatus(REJECTED_STATUS);
+        report.setHandledBy(request.handler());
+        report.setHandledAt(LocalDateTime.now());
+        report.setRejectReason(request.rejectReason());
+        return ClaimReportResponse.from(repository.save(report));
+    }
+
+    private ClaimReport findPendingClaim(Long id, String operation) {
+        ClaimReport report = repository.findById(id)
+                .orElseThrow(() -> new ClaimNotFoundException("报案不存在，ID：" + id));
+        if (!INITIAL_STATUS.equals(report.getStatus())) {
+            throw new ClaimStateConflictException(
+                    "报案当前状态为「" + report.getStatus() + "」，仅「待受理」状态的报案可以" + operation);
+        }
+        return report;
     }
 
     private String generateClaimNo() {

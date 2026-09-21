@@ -176,6 +176,6 @@ class ClaimReportApiTests {
         mockMvc.perform(get("/api/claims"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].policyNo", is(policyNo)))
-                .andExpect(jsonPath("$[*].status", everyItem(is("待受理"))));
+                .andExpect(jsonPath("$[0].status", is("待受理")));
     }
 }

@@ -15,7 +15,10 @@ public record ClaimReportResponse(
         BigDecimal claimAmount,
         String description,
         String status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String handledBy,
+        LocalDateTime handledAt,
+        String rejectReason
 ) {
     public static ClaimReportResponse from(ClaimReport report) {
         return new ClaimReportResponse(
@@ -29,7 +32,10 @@ public record ClaimReportResponse(
                 report.getClaimAmount(),
                 report.getDescription(),
                 report.getStatus(),
-                report.getCreatedAt()
+                report.getCreatedAt(),
+                report.getHandledBy(),
+                report.getHandledAt(),
+                report.getRejectReason()
         );
     }
 }

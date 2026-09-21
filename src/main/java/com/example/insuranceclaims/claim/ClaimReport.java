@@ -49,6 +49,14 @@ public class ClaimReport {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(length = 64)
+    private String handledBy;
+
+    private LocalDateTime handledAt;
+
+    @Column(length = 200)
+    private String rejectReason;
+
     public Long getId() {
         return id;
     }
@@ -131,5 +139,29 @@ public class ClaimReport {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getHandledBy() {
+        return handledBy;
+    }
+
+    public void setHandledBy(String handledBy) {
+        this.handledBy = handledBy;
+    }
+
+    public LocalDateTime getHandledAt() {
+        return handledAt;
+    }
+
+    public void setHandledAt(LocalDateTime handledAt) {
+        this.handledAt = handledAt;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 }
