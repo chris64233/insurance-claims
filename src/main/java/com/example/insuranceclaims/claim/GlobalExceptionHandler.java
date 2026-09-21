@@ -35,4 +35,25 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(InvalidReviewRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidReview(InvalidReviewRequestException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(ClaimNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ClaimNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ClaimAlreadyProcessedException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyProcessed(ClaimAlreadyProcessedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }

@@ -15,6 +15,9 @@ public record ClaimReportResponse(
         BigDecimal claimAmount,
         String description,
         String status,
+        String handler,
+        LocalDateTime handledAt,
+        String rejectReason,
         LocalDateTime createdAt
 ) {
     public static ClaimReportResponse from(ClaimReport report) {
@@ -29,6 +32,9 @@ public record ClaimReportResponse(
                 report.getClaimAmount(),
                 report.getDescription(),
                 report.getStatus(),
+                report.getHandler(),
+                report.getHandledAt(),
+                report.getRejectReason(),
                 report.getCreatedAt()
         );
     }
