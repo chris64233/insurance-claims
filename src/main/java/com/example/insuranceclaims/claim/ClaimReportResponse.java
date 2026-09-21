@@ -18,7 +18,11 @@ public record ClaimReportResponse(
         LocalDateTime createdAt,
         String handledBy,
         LocalDateTime handledAt,
-        String rejectReason
+        String rejectReason,
+        BigDecimal finalAmount,
+        String settledBy,
+        LocalDateTime settledAt,
+        String settleRemark
 ) {
     public static ClaimReportResponse from(ClaimReport report) {
         return new ClaimReportResponse(
@@ -35,7 +39,11 @@ public record ClaimReportResponse(
                 report.getCreatedAt(),
                 report.getHandledBy(),
                 report.getHandledAt(),
-                report.getRejectReason()
+                report.getRejectReason(),
+                report.getFinalAmount(),
+                report.getSettledBy(),
+                report.getSettledAt(),
+                report.getSettleRemark()
         );
     }
 }

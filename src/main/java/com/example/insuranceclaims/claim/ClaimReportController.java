@@ -44,4 +44,10 @@ public class ClaimReportController {
                                       @Valid @RequestBody RejectClaimRequest request) {
         return service.reject(id, request);
     }
+
+    @PostMapping("/{id}/settle")
+    public ClaimReportResponse settle(@PathVariable Long id,
+                                      @Valid @RequestBody SettleClaimRequest request) {
+        return service.settle(id, request);
+    }
 }

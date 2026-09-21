@@ -57,6 +57,17 @@ public class ClaimReport {
     @Column(length = 200)
     private String rejectReason;
 
+    @Column(precision = 14, scale = 2)
+    private BigDecimal finalAmount;
+
+    @Column(length = 64)
+    private String settledBy;
+
+    private LocalDateTime settledAt;
+
+    @Column(length = 300)
+    private String settleRemark;
+
     public Long getId() {
         return id;
     }
@@ -163,5 +174,37 @@ public class ClaimReport {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public BigDecimal getFinalAmount() {
+        return finalAmount;
+    }
+
+    public void setFinalAmount(BigDecimal finalAmount) {
+        this.finalAmount = finalAmount;
+    }
+
+    public String getSettledBy() {
+        return settledBy;
+    }
+
+    public void setSettledBy(String settledBy) {
+        this.settledBy = settledBy;
+    }
+
+    public LocalDateTime getSettledAt() {
+        return settledAt;
+    }
+
+    public void setSettledAt(LocalDateTime settledAt) {
+        this.settledAt = settledAt;
+    }
+
+    public String getSettleRemark() {
+        return settleRemark;
+    }
+
+    public void setSettleRemark(String settleRemark) {
+        this.settleRemark = settleRemark;
     }
 }
