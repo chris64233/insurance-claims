@@ -28,6 +28,7 @@ public class GlobalExceptionHandler {
         String message = switch (target) {
             case CreateClaimRequest ignored -> "报案信息校验失败";
             case SettleClaimRequest ignored -> "结案信息校验失败";
+            case PayClaimRequest ignored -> "赔付信息校验失败";
             default -> "请求参数校验失败";
         };
 

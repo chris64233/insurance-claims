@@ -22,9 +22,32 @@ public record ClaimReportResponse(
         BigDecimal finalAmount,
         String settledBy,
         LocalDateTime settledAt,
-        String settleRemark
+        String settleRemark,
+        ClaimPaymentInfo payment
 ) {
+    public record ClaimPaymentInfo(
+            Long id,
+            BigDecimal paidAmount,
+            String paidBy,
+            String voucherNo,
+            LocalDateTime paidAt
+    ) {
+        static ClaimPaymentInfo from(ClaimPayment payment) {
+            return new ClaimPaymentInfo(
+                    payment.getId(),
+                    payment.getPaidAmount(),
+                    payment.getPaidBy(),
+                    payment.getVoucherNo(),
+                    payment.getPaidAt()
+            );
+        }
+    }
+
     public static ClaimReportResponse from(ClaimReport report) {
+        return from(report, null);
+    }
+
+    public static ClaimReportResponse from(ClaimReport report, ClaimPayment payment) {
         return new ClaimReportResponse(
                 report.getId(),
                 report.getClaimNo(),
@@ -43,7 +66,8 @@ public record ClaimReportResponse(
                 report.getFinalAmount(),
                 report.getSettledBy(),
                 report.getSettledAt(),
-                report.getSettleRemark()
+                report.getSettleRemark(),
+                payment == null ? null : ClaimPaymentInfo.from(payment)
         );
     }
 }
