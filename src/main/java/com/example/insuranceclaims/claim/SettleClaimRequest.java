@@ -24,6 +24,8 @@ public record SettleClaimRequest(
 ) {
     public SettleClaimRequest {
         settledBy = settledBy == null ? null : settledBy.trim();
+        settledBy = settledBy != null && settledBy.isEmpty() ? null : settledBy;
         settleRemark = settleRemark == null ? null : settleRemark.trim();
+        settleRemark = settleRemark != null && settleRemark.isEmpty() ? null : settleRemark;
     }
 }

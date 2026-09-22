@@ -10,5 +10,6 @@ public record AcceptClaimRequest(
 ) {
     public AcceptClaimRequest {
         handler = handler == null ? null : handler.trim();
+        handler = handler != null && handler.isEmpty() ? null : handler;
     }
 }

@@ -22,9 +22,14 @@ public record ClaimReportResponse(
         BigDecimal finalAmount,
         String settledBy,
         LocalDateTime settledAt,
-        String settleRemark
+        String settleRemark,
+        ClaimPaymentResponse payment
 ) {
     public static ClaimReportResponse from(ClaimReport report) {
+        return from(report, null);
+    }
+
+    public static ClaimReportResponse from(ClaimReport report, ClaimPayment payment) {
         return new ClaimReportResponse(
                 report.getId(),
                 report.getClaimNo(),
@@ -43,7 +48,8 @@ public record ClaimReportResponse(
                 report.getFinalAmount(),
                 report.getSettledBy(),
                 report.getSettledAt(),
-                report.getSettleRemark()
+                report.getSettleRemark(),
+                payment == null ? null : ClaimPaymentResponse.from(payment)
         );
     }
 }

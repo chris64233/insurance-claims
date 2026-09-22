@@ -7,6 +7,9 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ClaimReportService {
@@ -15,14 +18,18 @@ public class ClaimReportService {
     public static final String ACCEPTED_STATUS = "处理中";
     public static final String REJECTED_STATUS = "已驳回";
     public static final String SETTLED_STATUS = "已结案";
+    public static final String PAID_STATUS = "已赔付";
 
     private static final DateTimeFormatter CLAIM_NO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final ClaimReportRepository repository;
+    private final ClaimPaymentRepository paymentRepository;
     private final SecureRandom random = new SecureRandom();
 
-    public ClaimReportService(ClaimReportRepository repository) {
+    public ClaimReportService(ClaimReportRepository repository,
+                              ClaimPaymentRepository paymentRepository) {
         this.repository = repository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -50,8 +57,13 @@ public class ClaimReportService {
 
     @Transactional(readOnly = true)
     public List<ClaimReportResponse> listAll() {
-        return repository.findAllByOrderByCreatedAtDesc().stream()
-                .map(ClaimReportResponse::from)
+        List<ClaimReport> reports = repository.findAllByOrderByCreatedAtDesc();
+        Map<Long, ClaimPayment> payments = paymentRepository
+                .findByClaimIdIn(reports.stream().map(ClaimReport::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(ClaimPayment::getClaimId, Function.identity()));
+        return reports.stream()
+                .map(report -> ClaimReportResponse.from(report, payments.get(report.getId())))
                 .toList();
     }
 
@@ -93,6 +105,56 @@ public class ClaimReportService {
         report.setSettledAt(LocalDateTime.now());
         report.setSettleRemark(request.settleRemark());
         return ClaimReportResponse.from(repository.save(report));
+    }
+
+    @Transactional
+    public ClaimReportResponse pay(Long id, PayClaimRequest request) {
+        ClaimReport report = repository.findById(id)
+                .orElseThrow(() -> new ClaimNotFoundException("报案不存在，ID：" + id));
+
+        ClaimPayment existing = paymentRepository.findByClaimId(id).orElse(null);
+        if (existing != null) {
+            if (existing.getVoucherNo().equals(request.voucherNo())) {
+                if (existing.getPaidAmount().compareTo(request.paidAmount()) == 0
+                        && existing.getPaidBy().equals(request.paidBy())) {
+                    return ClaimReportResponse.from(report, existing);
+                }
+                throw new ClaimStateConflictException(
+                        "赔付凭证号「" + request.voucherNo() + "」已有赔付记录，赔付金额或办理人与原记录不一致");
+            }
+            throw new ClaimStateConflictException(
+                    "该报案已使用凭证号「" + existing.getVoucherNo() + "」完成赔付，不能重复赔付");
+        }
+
+        if (paymentRepository.findByVoucherNo(request.voucherNo()).isPresent()) {
+            throw new ClaimStateConflictException(
+                    "赔付凭证号「" + request.voucherNo() + "」已用于其他报案，不能重复使用");
+        }
+
+        if (!SETTLED_STATUS.equals(report.getStatus())) {
+            throw new ClaimStateConflictException(
+                    "报案当前状态为「" + report.getStatus() + "」，仅「已结案」状态的报案可以执行赔付");
+        }
+
+        if (report.getFinalAmount() == null) {
+            throw new ClaimValidationException("报案尚未结案，缺少最终结案金额，无法执行赔付");
+        }
+        if (report.getFinalAmount().compareTo(request.paidAmount()) != 0) {
+            throw new ClaimValidationException(
+                    "实际赔付金额必须等于最终结案金额（结案金额：" + report.getFinalAmount() + "元）");
+        }
+
+        ClaimPayment payment = new ClaimPayment();
+        payment.setClaimId(report.getId());
+        payment.setPaidAmount(request.paidAmount());
+        payment.setPaidBy(request.paidBy());
+        payment.setVoucherNo(request.voucherNo());
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        report.setStatus(PAID_STATUS);
+        repository.save(report);
+        return ClaimReportResponse.from(report, payment);
     }
 
     private ClaimReport findPendingClaim(Long id, String operation) {

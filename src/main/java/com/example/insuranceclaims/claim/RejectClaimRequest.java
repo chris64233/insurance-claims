@@ -13,5 +13,8 @@ public record RejectClaimRequest(
 ) {
     public RejectClaimRequest {
         handler = handler == null ? null : handler.trim();
+        handler = handler != null && handler.isEmpty() ? null : handler;
+        rejectReason = rejectReason == null ? null : rejectReason.trim();
+        rejectReason = rejectReason != null && rejectReason.isEmpty() ? null : rejectReason;
     }
 }
