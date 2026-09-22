@@ -23,13 +23,20 @@ public record ClaimReportResponse(
         String settledBy,
         LocalDateTime settledAt,
         String settleRemark,
-        ClaimPaymentResponse payment
+        ClaimPaymentResponse payment,
+        ClaimPaymentReversalResponse reversal
 ) {
     public static ClaimReportResponse from(ClaimReport report) {
-        return from(report, null);
+        return from(report, null, null);
     }
 
     public static ClaimReportResponse from(ClaimReport report, ClaimPayment payment) {
+        return from(report, payment, null);
+    }
+
+    public static ClaimReportResponse from(ClaimReport report,
+                                           ClaimPayment payment,
+                                           ClaimPaymentReversal reversal) {
         return new ClaimReportResponse(
                 report.getId(),
                 report.getClaimNo(),
@@ -49,7 +56,8 @@ public record ClaimReportResponse(
                 report.getSettledBy(),
                 report.getSettledAt(),
                 report.getSettleRemark(),
-                payment == null ? null : ClaimPaymentResponse.from(payment)
+                payment == null ? null : ClaimPaymentResponse.from(payment),
+                reversal == null ? null : ClaimPaymentReversalResponse.from(reversal)
         );
     }
 }

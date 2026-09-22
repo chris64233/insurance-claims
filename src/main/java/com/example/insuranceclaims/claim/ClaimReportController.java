@@ -56,4 +56,10 @@ public class ClaimReportController {
                                    @Valid @RequestBody PayClaimRequest request) {
         return service.pay(id, request);
     }
+
+    @PostMapping("/{id}/reverse-payment")
+    public ClaimReportResponse reversePayment(@PathVariable Long id,
+                                              @Valid @RequestBody ReverseClaimPaymentRequest request) {
+        return service.reversePayment(id, request);
+    }
 }

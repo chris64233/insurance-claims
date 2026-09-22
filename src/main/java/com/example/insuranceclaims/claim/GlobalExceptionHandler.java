@@ -29,6 +29,7 @@ public class GlobalExceptionHandler {
             case CreateClaimRequest ignored -> "报案信息校验失败";
             case SettleClaimRequest ignored -> "结案信息校验失败";
             case PayClaimRequest ignored -> "赔付信息校验失败";
+            case ReverseClaimPaymentRequest ignored -> "赔付撤销信息校验失败";
             default -> "请求参数校验失败";
         };
 
