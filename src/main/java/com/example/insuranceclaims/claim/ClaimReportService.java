@@ -19,17 +19,21 @@ public class ClaimReportService {
     public static final String REJECTED_STATUS = "已驳回";
     public static final String SETTLED_STATUS = "已结案";
     public static final String PAID_STATUS = "已赔付";
+    public static final String REVERSED_STATUS = "赔付已撤销";
 
     private static final DateTimeFormatter CLAIM_NO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final ClaimReportRepository repository;
     private final ClaimPaymentRepository paymentRepository;
+    private final ClaimPaymentReversalRepository reversalRepository;
     private final SecureRandom random = new SecureRandom();
 
     public ClaimReportService(ClaimReportRepository repository,
-                              ClaimPaymentRepository paymentRepository) {
+                              ClaimPaymentRepository paymentRepository,
+                              ClaimPaymentReversalRepository reversalRepository) {
         this.repository = repository;
         this.paymentRepository = paymentRepository;
+        this.reversalRepository = reversalRepository;
     }
 
     @Transactional
@@ -62,8 +66,15 @@ public class ClaimReportService {
                 .findByClaimIdIn(reports.stream().map(ClaimReport::getId).toList())
                 .stream()
                 .collect(Collectors.toMap(ClaimPayment::getClaimId, Function.identity()));
+        Map<Long, ClaimPaymentReversal> reversals = reversalRepository
+                .findByClaimIdIn(reports.stream().map(ClaimReport::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(ClaimPaymentReversal::getClaimId,
+                        Function.identity()));
         return reports.stream()
-                .map(report -> ClaimReportResponse.from(report, payments.get(report.getId())))
+                .map(report -> ClaimReportResponse.from(report,
+                        payments.get(report.getId()),
+                        reversals.get(report.getId())))
                 .toList();
     }
 
@@ -155,6 +166,61 @@ public class ClaimReportService {
         report.setStatus(PAID_STATUS);
         repository.save(report);
         return ClaimReportResponse.from(report, payment);
+    }
+
+    @Transactional
+    public ClaimReportResponse reversePayment(Long id, ReversePaymentRequest request) {
+        ClaimReport report = repository.findById(id)
+                .orElseThrow(() -> new ClaimNotFoundException("报案不存在，ID：" + id));
+
+        ClaimPaymentReversal existingReversal = reversalRepository.findByClaimId(id)
+                .orElse(null);
+        if (existingReversal != null) {
+            if (existingReversal.getReversalVoucherNo().equals(request.reversalVoucherNo())) {
+                if (existingReversal.getReversedBy().equals(request.reversedBy())
+                        && existingReversal.getReverseReason().equals(request.reverseReason())) {
+                    return ClaimReportResponse.from(report,
+                            paymentRepository.findByClaimId(id).orElse(null),
+                            existingReversal);
+                }
+                throw new ClaimStateConflictException(
+                        "撤销凭证号「" + request.reversalVoucherNo()
+                                + "」已有撤销记录，撤销办理人或撤销原因与原记录不一致");
+            }
+            throw new ClaimStateConflictException(
+                    "该报案已使用撤销凭证号「" + existingReversal.getReversalVoucherNo()
+                            + "」完成赔付撤销，不能重复撤销");
+        }
+
+        if (reversalRepository.findByReversalVoucherNo(request.reversalVoucherNo())
+                .isPresent()) {
+            throw new ClaimStateConflictException(
+                    "撤销凭证号「" + request.reversalVoucherNo()
+                            + "」已用于其他报案，不能重复使用");
+        }
+
+        if (!PAID_STATUS.equals(report.getStatus())) {
+            throw new ClaimStateConflictException(
+                    "报案当前状态为「" + report.getStatus()
+                            + "」，仅「已赔付」状态的报案可以撤销赔付");
+        }
+
+        ClaimPayment payment = paymentRepository.findByClaimId(id)
+                .orElseThrow(() -> new ClaimStateConflictException(
+                        "该报案不存在赔付记录，无法撤销赔付"));
+
+        ClaimPaymentReversal reversal = new ClaimPaymentReversal();
+        reversal.setClaimId(report.getId());
+        reversal.setPaymentId(payment.getId());
+        reversal.setReversedBy(request.reversedBy());
+        reversal.setReverseReason(request.reverseReason());
+        reversal.setReversalVoucherNo(request.reversalVoucherNo());
+        reversal.setReversedAt(LocalDateTime.now());
+        reversalRepository.save(reversal);
+
+        report.setStatus(REVERSED_STATUS);
+        repository.save(report);
+        return ClaimReportResponse.from(report, payment, reversal);
     }
 
     private ClaimReport findPendingClaim(Long id, String operation) {
